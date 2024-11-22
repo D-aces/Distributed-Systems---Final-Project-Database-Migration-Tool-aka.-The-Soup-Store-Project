@@ -4,14 +4,15 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Migrationserver extends UnicastRemoteObject implements MigrationInterface, DatabaseMigrationServer {
-    public volatile Map<String, List<Boolean>> tableTransferStatus = new HashMap<>();
-    public volatile List<DatabaseHandler> dbHandlers = new ArrayList<>();
+public class Migrationserver extends UnicastRemoteObject implements MigrationInterface {
+    public static volatile Map<String, List<Boolean>> tableTransferStatus = new HashMap<>();
+    public static volatile List<DatabaseHandler> dbHandlers = new ArrayList<>();
 
     public Migrationserver() throws RemoteException {
         super();
@@ -24,8 +25,14 @@ public class Migrationserver extends UnicastRemoteObject implements MigrationInt
             registry.rebind("MigrationService", theServer);
             System.out.println("Migration Server is running...");
 
-            synchronized (Migrationserver.class) {
-                Migrationserver.class.wait(); // Keeps the server alive indefinitely
+            while (true) {
+                for (String table : tableTransferStatus.keySet()) {
+                    for (int i = 1; i < dbHandlers.size(); i++) {
+                        if (!tableTransferStatus.get(table).get(i)) {
+                            dbHandlers.get(0).transferTo(dbHandlers.get(i).localDatabase, table);
+                        }
+                    }
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -34,21 +41,39 @@ public class Migrationserver extends UnicastRemoteObject implements MigrationInt
 
     @Override
     public String migrationStatus() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'migrationStatus'");
+        int total = 0;
+        int transferred = 0;
+        for (String table : tableTransferStatus.keySet()) {
+            total += tableTransferStatus.get(table).size();
+            for (Boolean bool : tableTransferStatus.get(table))
+                transferred += bool ? 1 : 0;
+        }
+        return "Replica " + transferred + "/" + total;
     }
 
     @Override
-    public String select(String query) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'select'");
+    public String select(String table, String query, Object... params) throws RemoteException {
+        List<Boolean> boolArr = tableTransferStatus.get(table);
+        if (boolArr == null)
+            return "Table not found!";
+        List<DatabaseHandler> valids = new ArrayList<>();
+        for (int i = 0; i < boolArr.size(); i++) {
+            if (boolArr.get(i))
+                valids.add(dbHandlers.get(i));
+        }
+        DatabaseHandler useingDB = valids.get((int)(Math.random() * valids.size()));
+        try {
+            return useingDB.localDatabase.query(query, params).toString();
+        } catch (SQLException e) {
+            throw new RemoteException(e.getMessage());
+        }
     }
 
     @Override
-    public String insert(String query) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'insert'");
+    public String insert(String table, String query, Object... params) throws RemoteException {
+        return this.select(table, query, params);
     }
+
     @Override
     public void addCloudDatabase(String cloudDatabase) throws RemoteException {
         if (dbHandlers.size() == 0 || tableTransferStatus.size() == 0)
@@ -74,21 +99,6 @@ public class Migrationserver extends UnicastRemoteObject implements MigrationInt
         }
         dbHandlers.add(localdb);
 
-    }
-    @Override
-    public String startMigration(String dbPath) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'startMigration'");
-    }
-    @Override
-    public String getMigrationStatus(String migrationId) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getMigrationStatus'");
-    }
-    @Override
-    public void registerCallback(String migrationId, MigrationCallback callback) throws RemoteException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'registerCallback'");
     }
 }
 

@@ -56,6 +56,22 @@ public class DatabaseHandler {
         }
     }
 
+    public void transferTo(DatabaseServer otherdb, String table) {
+        String query = "SELECT 'id', 'name', 'price' FROM ?;";
+        try {
+            ResultSet resultSet = this.localDatabase.query(query, table);
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                double price = resultSet.getDouble("price");
+                otherdb.execute("INSERT INTO ? ('id', 'name', 'price') VALUES (?,?,?);", table, id, name, price);
+            }
+        } catch (Exception e) {
+            System.err.println("Error Transferring: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     public void readAllData(String table) {
         String query = "SELECT * FROM " + table;
         try {
