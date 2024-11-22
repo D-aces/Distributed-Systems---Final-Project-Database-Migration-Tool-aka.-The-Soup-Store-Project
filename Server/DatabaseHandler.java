@@ -175,6 +175,38 @@ public void clearCloudDatabase() {
     }
 }
 
+// Creates a table based off of original db 
+public void createTable(DatabaseServer db, String tableName) {
+    // Query to retrieve column information from the local database
+    String query = "PRAGMA table_info(" + tableName + ")";
+    StringBuilder createTableQuery = new StringBuilder();
+    createTableQuery.append("CREATE TABLE IF NOT EXISTS " + tableName + " (");
+
+    try {
+        ResultSet resultSet = localDatabase.query(query);
+
+        // Loop through the column information and construct the CREATE TABLE query
+        while (resultSet.next()) {
+            String columnName = resultSet.getString("name");
+            String columnType = resultSet.getString("type");
+
+            // Append column definition to the CREATE TABLE query
+            createTableQuery.append(columnName + " " + columnType + ", ");
+        }
+
+        // Remove trailing comma and space
+        if (createTableQuery.length() > 0) {
+            createTableQuery.replace(createTableQuery.length() - 2, createTableQuery.length(), ")");
+        }
+        System.out.println(createTableQuery.toString());
+        // Execute the CREATE TABLE query
+        db.execute(createTableQuery.toString());
+        System.out.println("Table " + tableName + " created successfully in the cloud database.");
+    } catch (Exception e) {
+        System.err.println("Error creating table " + tableName + ": " + e.getMessage());
+    }
+}
+
 public void printAllEntries(DatabaseServer database) {
     try {
         // Get all table names in the database

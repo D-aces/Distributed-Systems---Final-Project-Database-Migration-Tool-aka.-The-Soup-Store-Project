@@ -22,7 +22,7 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
     private Map<String, MigrationCallback> callbacks = new HashMap<>();
     private DatabaseHandler dbHandler;
     private static DatabaseServer localDatabase, cloudDatabase;
-    private static boolean testingBit = true;
+    private static boolean testingBit = false;
 
     protected MigrationserverTests(DatabaseHandler dbHandler) throws RemoteException {
         super();
@@ -92,6 +92,8 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
 
         int counter = 0;
         for (String tableName : tableNames) {
+            
+            dbHandler.createTable(cloudDatabase, tableName);
             // tableNames =["chunky_soup", "smooth_soup", "spicy_soup"] this is what is in
             // tableNames
             // This for each loop will loop through each of the tables in the local
@@ -180,7 +182,7 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
         dbHandler.closeConnection();
 
         // Signal the transfer is complete
-        notifyClient("Migration completed successfully!");
+        // notifyClient("Migration completed successfully!");
     }
 
     private static void notifyClient(String message) {
