@@ -1,3 +1,4 @@
+package Client;
 /* TODO: Create CLI tooling that allows developers (our users) to:
     - Input Database Information (setting up access to the database)
     From here the user either:
@@ -9,6 +10,10 @@
     - When the Migrationserver has completed the migration process the user should be notified, if the client CLI is closed it should be reopened (or some other method to notify?)      
  */
 
+ import java.rmi.Remote;
+ import java.rmi.RemoteException;
+
  public class MigrationClient{
+    
     
  }

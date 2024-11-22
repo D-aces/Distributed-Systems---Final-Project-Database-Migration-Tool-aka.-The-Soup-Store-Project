@@ -1,3 +1,4 @@
+package Server;
 // // TODO: Review and Test DatabaseServer Class
 
 
@@ -24,8 +25,6 @@
 
 // }
 // WE DO A LITTLE COMMENTING
-
-
 
 import java.sql.Connection;
 import java.sql.DriverManager;
