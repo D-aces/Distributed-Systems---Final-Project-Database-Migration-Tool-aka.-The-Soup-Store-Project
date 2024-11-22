@@ -8,4 +8,6 @@ public interface MigrationInterface extends Remote {
    String migrateDatabase(String localDatabase, String cloudDatabase) throws RemoteException;
    // TODO: Find a better return type for this
    String migrationStatus();
+   String select(String query);
+   String insert(String query);
 }

@@ -6,20 +6,17 @@ import java.util.List;
 
 public class DatabaseHandler {
 
-    DatabaseServer localDatabase;
-    DatabaseServer cloudDatabase;
+    public DatabaseServer localDatabase;
 
 
-    public DatabaseHandler(DatabaseServer localDatabase, DatabaseServer cloudDatabase){
+    public DatabaseHandler(DatabaseServer localDatabase){
         this.localDatabase = localDatabase;
-        this.cloudDatabase = cloudDatabase;
     }
 
      // Open both local database connections
      public void openConnection() {
         try {
             localDatabase.open();
-            cloudDatabase.open();
         } catch (Exception e) {
             System.err.println("Error opening database connections: " + e.getMessage());
         }
@@ -29,29 +26,18 @@ public class DatabaseHandler {
     public void closeConnection() {
         try {
             localDatabase.close();
-            cloudDatabase.close();
         } catch (Exception e) {
             System.err.println("Error closing database connections: " + e.getMessage());
         }
     }
 
-    public void insertDataLocal(String table, int id, String name, double price) {
+    public void insertData(String table, int id, String name, double price) {
         String query = "INSERT INTO " + table + " (id, name, price) VALUES (?, ?, ?)";
         try {
             // insertDataLocal is used here to execute the query on localDatabase
             localDatabase.execute(query, id, name, price);
         } catch (Exception e) {
             System.err.println("Error inserting data: " + e.getMessage());
-        }
-    }
-
-    public void insertDataCloud(String table, int id, String name, double price) {
-        String query = "INSERT INTO " + table + " (id, name, price) VALUES (?, ?, ?)";
-        try {
-            // cloudDatabase is used here to execute the query on cloudDatabase
-            cloudDatabase.execute(query, id, name, price);
-        } catch (Exception e) {
-            System.err.println("Error inserting data into table " + table + ": " + e.getMessage());
         }
     }
 
@@ -92,12 +78,12 @@ public class DatabaseHandler {
 
     // Get the number of tables in a database
     //I want to pass in db name and get the number of tables in that database, not sure if this will work
-    public int countTables(DatabaseServer database) {
+    public int countTables() {
         String query = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'";
         int tableCount = 0;
     
         try {
-            ResultSet resultSet = database.query(query);
+            ResultSet resultSet = this.localDatabase.query(query);
             if (resultSet.next()) {
                 tableCount = resultSet.getInt(1); // Get the count from the result set
             }
@@ -109,12 +95,12 @@ public class DatabaseHandler {
     }
 
     //Used to get the table names in a database
-    public List<String> getTableNames(DatabaseServer database) {
+    public List<String> getTableNames() {
     String query = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'";
     List<String> tableNames = new ArrayList<>();
 
     try {
-        ResultSet resultSet = database.query(query);
+        ResultSet resultSet = this.localDatabase.query(query);
         while (resultSet.next()) {
             tableNames.add(resultSet.getString("name"));
         }
@@ -126,12 +112,12 @@ public class DatabaseHandler {
 }
     
 // Get the number of rows in a table
-public int getRowCount(DatabaseServer database, String tableName) {
+public int getRowCount(String tableName) {
     String query = "SELECT COUNT(*) FROM " + tableName;
     int rowCount = 0;
 
     try {
-        ResultSet resultSet = database.query(query);
+        ResultSet resultSet = this.localDatabase.query(query);
         if (resultSet.next()) {
             rowCount = resultSet.getInt(1); // Get the count from the first column
         }
@@ -143,12 +129,12 @@ public int getRowCount(DatabaseServer database, String tableName) {
 } 
 
 // This method retrieves a single row from a table based on an offset
-public ResultSet getRowByOffset(DatabaseServer database, String tableName, int offset) {
+public ResultSet getRowByOffset(String tableName, int offset) {
     String query = "SELECT * FROM " + tableName + " LIMIT 1 OFFSET " + offset;
     ResultSet resultSet = null;
 
     try {
-        resultSet = database.query(query);
+        resultSet = this.localDatabase.query(query);
     } catch (Exception e) {
         System.err.println("Error retrieving row at offset " + offset + " from table " + tableName + ": " + e.getMessage());
     }
@@ -156,29 +142,10 @@ public ResultSet getRowByOffset(DatabaseServer database, String tableName, int o
     return resultSet;
 }
 
-// The purge 
-public void clearCloudDatabase() {
-    try {
-        // Get the list of table names for the cloud database
-        List<String> tableNames = getTableNames(cloudDatabase);
-
-        // Loop through each table and delete all rows
-        for (String tableName : tableNames) {
-            String query = "DELETE FROM " + tableName; // Deletes all rows in the table
-            cloudDatabase.execute(query); // Execute the delete query
-            System.out.println("Cleared all entries from table: " + tableName);
-        }
-
-        System.out.println("All tables in the cloud database have been cleared.\n");
-    } catch (Exception e) {
-        System.err.println("Error clearing cloud database: " + e.getMessage());
-    }
-}
-
 public void printAllEntries(DatabaseServer database) {
     try {
         // Get all table names in the database
-        List<String> tableNames = getTableNames(database);
+        List<String> tableNames = getTableNames();
 
         // Iterate through each table
         for (String tableName : tableNames) {
@@ -196,11 +163,5 @@ public void printAllEntries(DatabaseServer database) {
     } catch (Exception e) {
         System.err.println("Error printing all entries: " + e.getMessage());
     }
-}
-
-
-
-
-
-    
+}    
 }
