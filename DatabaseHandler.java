@@ -34,12 +34,23 @@ public class DatabaseHandler {
         }
     }
 
-    public void insertData(String table, int id, String name, double price) {
+    public void insertDataLocal(String table, int id, String name, double price) {
         String query = "INSERT INTO " + table + " (id, name, price) VALUES (?, ?, ?)";
         try {
+            // insertDataLocal is used here to execute the query on localDatabase
             localDatabase.execute(query, id, name, price);
         } catch (Exception e) {
             System.err.println("Error inserting data: " + e.getMessage());
+        }
+    }
+
+    public void insertDataCloud(String table, int id, String name, double price) {
+        String query = "INSERT INTO " + table + " (id, name, price) VALUES (?, ?, ?)";
+        try {
+            // cloudDatabase is used here to execute the query on cloudDatabase
+            cloudDatabase.execute(query, id, name, price);
+        } catch (Exception e) {
+            System.err.println("Error inserting data into table " + table + ": " + e.getMessage());
         }
     }
 
@@ -67,6 +78,11 @@ public class DatabaseHandler {
                 String name = resultSet.getString("name");
                 double price = resultSet.getDouble("price");
                 System.out.println("ID: " + retrievedId + ", Name: " + name + ", Price: " + price);
+
+                long start = System.currentTimeMillis();
+                while (System.currentTimeMillis() - start < 500) {
+                // prison
+                }
             }
         } catch (Exception e) {
             System.err.println("Error reading data: " + e.getMessage());
@@ -125,7 +141,61 @@ public int getRowCount(DatabaseServer database, String tableName) {
     return rowCount;
 } 
 
+// This method retrieves a single row from a table based on an offset
+public ResultSet getRowByOffset(DatabaseServer database, String tableName, int offset) {
+    String query = "SELECT * FROM " + tableName + " LIMIT 1 OFFSET " + offset;
+    ResultSet resultSet = null;
 
+    try {
+        resultSet = database.query(query);
+    } catch (Exception e) {
+        System.err.println("Error retrieving row at offset " + offset + " from table " + tableName + ": " + e.getMessage());
+    }
+
+    return resultSet;
+}
+
+// The purge 
+public void clearCloudDatabase() {
+    try {
+        // Get the list of table names for the cloud database
+        List<String> tableNames = getTableNames(cloudDatabase);
+
+        // Loop through each table and delete all rows
+        for (String tableName : tableNames) {
+            String query = "DELETE FROM " + tableName; // Deletes all rows in the table
+            cloudDatabase.execute(query); // Execute the delete query
+            System.out.println("Cleared all entries from table: " + tableName);
+        }
+
+        System.out.println("All tables in the cloud database have been cleared.\n");
+    } catch (Exception e) {
+        System.err.println("Error clearing cloud database: " + e.getMessage());
+    }
+}
+
+public void printAllEntries(DatabaseServer database) {
+    try {
+        // Get all table names in the database
+        List<String> tableNames = getTableNames(database);
+
+        // Iterate through each table
+        for (String tableName : tableNames) {
+            System.out.println("\nTable: " + tableName);
+
+            // Call readAllData for each table
+            readAllData(tableName);
+            long start = System.currentTimeMillis();
+                while (System.currentTimeMillis() - start < 1000) {
+                // prison
+                }
+        }
+
+        System.out.println("\nAll entries have been printed.");
+    } catch (Exception e) {
+        System.err.println("Error printing all entries: " + e.getMessage());
+    }
+}
 
 
 
