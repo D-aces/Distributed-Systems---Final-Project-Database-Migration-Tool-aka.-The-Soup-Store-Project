@@ -3,12 +3,18 @@ package Client;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Scanner;
+import Server.DatabaseMigrationServer;
+
 
 public class MigrationClient {
     public static void main(String[] args) {
         try {
             Registry registry = LocateRegistry.getRegistry("localhost", 1099);
             DatabaseMigrationServer server = (DatabaseMigrationServer) registry.lookup("MigrationService");
+
+            MigrationCallback callback = new MigrationClientCallback();
+            registry.rebind("ClientCallback", callback);
+            System.out.println("Callback object bound to registry.");
 
             Scanner scanner = new Scanner(System.in);
 
