@@ -29,39 +29,19 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
         this.dbHandler = dbHandler;
     }
 
-    public static void main(String[] args) {
-        try {
-            // Create two local databases
-            // Change datasource url
-            DatabaseServer localDatabase = new DatabaseServer("jdbc:sqlite:LocalSoupStore.db");
-            DatabaseServer cloudDatabase = new DatabaseServer("jdbc:sqlite:CloudSoupStore.db");
-
-            // Create the handler --> DatabaseManager (rename?)
-            DatabaseHandler dbHandler = new DatabaseHandler(localDatabase, cloudDatabase);
-
-            // Open connections
-            dbHandler.openConnection();
-
-            // Clear the cloud database
-            // FOR TESTING PURPOSES ONLY
-            if (testingBit) {
-                System.out.println("\nResetting cloud database for testing...");
-                dbHandler.clearCloudDatabase();
-            }
-
-            long start1 = System.currentTimeMillis(); // TODO: need to fix all of these start variables, dont need to
-                                                      // declare them all
-            while (System.currentTimeMillis() - start1 < 4000) {
-                // prison
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     private void performMigration(String migrationId) {
+        // Create two local databases
+        // Change datasource url
+        DatabaseServer localDatabase = new DatabaseServer("jdbc:sqlite:LocalSoupStore.db");
+        DatabaseServer cloudDatabase = new DatabaseServer("jdbc:sqlite:CloudSoupStore.db");
 
-        // Clear the cloud database
+        // Create the handler --> DatabaseManager (rename?)
+        DatabaseHandler dbHandler = new DatabaseHandler(localDatabase, cloudDatabase);
+
+        // Open connections
+        dbHandler.openConnection();
+
+                // Clear the cloud database
         // FOR TESTING PURPOSES ONLY
         if (testingBit) {
             System.out.println("\nResetting cloud database for testing...");
@@ -73,16 +53,6 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
         while (System.currentTimeMillis() - start1 < 4000) {
             // prison
         }
-        // Create two local databases
-        // Change datasource url
-        DatabaseServer localDatabase = new DatabaseServer("jdbc:sqlite:LocalSoupStore.db");
-        DatabaseServer cloudDatabase = new DatabaseServer("jdbc:sqlite:CloudSoupStore.db");
-
-        // Create the handler --> DatabaseManager (rename?)
-        DatabaseHandler dbHandler = new DatabaseHandler(localDatabase, cloudDatabase);
-
-        // Open connections
-        dbHandler.openConnection();
 
         // Get the number of tables in a database. They are stored in: localTableCount
         // and cloudTableCount
@@ -97,9 +67,13 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
         // Retrieve the list of table names
         List<String> tableNames = dbHandler.getTableNames(localDatabase);
         if (!tableNames.isEmpty()) {
+            System.out.println(tableNames.size());
             tableMigrationArray = new Boolean[tableNames.size()];
             tableMigrationArray2 = new Boolean[tableNames.size()];
-
+            for (int x = 0; x < tableNames.size(); x++) {
+                tableMigrationArray[x] = true;  // Initially set to true (needs migration)
+                tableMigrationArray2[x] = false;  // Initially set to false (not yet migrated)
+            }
         } else {
             System.err.println("Table Size is 0");
         }
@@ -116,7 +90,7 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
             // prison
         }
 
-        int x = 0;
+        int counter = 0;
         for (String tableName : tableNames) {
             // tableNames =["chunky_soup", "smooth_soup", "spicy_soup"] this is what is in
             // tableNames
@@ -164,12 +138,11 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
                 }
             }
 
-            // TODO: Vanquish table (destroyer of databases)
-
             // Successful Migration
             // TODO: Add Validation Check
-            tableMigrationArray2[x] = true;
-            tableMigrationArray[x] = false;
+            System.out.println(counter+1 +  "/" + tableNames.size() + " tables");
+            tableMigrationArray2[counter] = true;
+            tableMigrationArray[counter] = false;
 
             // //Thread.sleep(1000);
             // Simulate a delay of approximately 1 second, horrible way to do
@@ -177,7 +150,19 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
             while (System.currentTimeMillis() - start < 1000) {
                 // prison
             }
-            x++;
+            counter++;
+        }
+
+        dbHandler.closeConnection();
+        dbHandler.openConnection();
+
+
+        System.out.println("\nDropping tables from local database...");
+        for (int i = 0; i < tableNames.size(); i++) {
+            if (tableMigrationArray[i] == false && tableMigrationArray2[i] == true) {
+                dbHandler.dropTable(localDatabase, tableNames.get(i)); //TODO plase uncomment for demo
+                System.out.println("Dropped table: " + tableNames.get(i));
+            }
         }
 
         // Verify the contents of the cloud database
@@ -186,7 +171,10 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
         while (System.currentTimeMillis() - start < 4000) {
             // prison
         }
+
         dbHandler.printAllEntries(cloudDatabase);
+        dbHandler.printAllEntries(localDatabase);
+        
 
         // Close connections
         dbHandler.closeConnection();

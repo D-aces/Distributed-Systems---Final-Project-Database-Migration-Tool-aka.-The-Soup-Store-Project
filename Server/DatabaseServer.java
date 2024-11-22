@@ -71,4 +71,8 @@ public class DatabaseServer {
         }
         preparedStatement.executeUpdate();
     }
+
+    public String getUrl(){
+        return databaseUrl;
+    }
 }

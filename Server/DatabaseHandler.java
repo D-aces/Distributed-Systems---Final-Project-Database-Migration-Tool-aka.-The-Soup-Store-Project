@@ -55,10 +55,10 @@ public class DatabaseHandler {
         }
     }
 
-    public void readData(String table, int id) {
+    public void readData(DatabaseServer db, String table, int id) {
         String query = "SELECT * FROM " + table + " WHERE id = ?";
         try {
-            ResultSet resultSet = localDatabase.query(query, id);
+            ResultSet resultSet = db.query(query, id);
             while (resultSet.next()) {
                 int retrievedId = resultSet.getInt("id");
                 String name = resultSet.getString("name");
@@ -70,10 +70,10 @@ public class DatabaseHandler {
         }
     }
 
-    public void readAllData(String table) {
+    public void readAllData(DatabaseServer db, String table) {
         String query = "SELECT * FROM " + table;
         try {
-            ResultSet resultSet = localDatabase.query(query);
+            ResultSet resultSet = db.query(query);
             while (resultSet.next()) {
                 int retrievedId = resultSet.getInt("id");
                 String name = resultSet.getString("name");
@@ -180,12 +180,16 @@ public void printAllEntries(DatabaseServer database) {
         // Get all table names in the database
         List<String> tableNames = getTableNames(database);
 
+        if(tableNames.size() == 0){
+            System.out.println("No tables exist in database: " + database.getUrl());
+            return;
+        }
         // Iterate through each table
         for (String tableName : tableNames) {
-            System.out.println("\nTable: " + tableName);
+            System.out.println("\nTable: " + tableName + " from database" + database.getUrl());
 
             // Call readAllData for each table
-            readAllData(tableName);
+            readAllData(database, tableName);
             long start = System.currentTimeMillis();
                 while (System.currentTimeMillis() - start < 1000) {
                 // prison
@@ -193,14 +197,19 @@ public void printAllEntries(DatabaseServer database) {
         }
 
         System.out.println("\nAll entries have been printed.");
+        System.out.println("Number of tables migrated: " + tableNames.size());
     } catch (Exception e) {
         System.err.println("Error printing all entries: " + e.getMessage());
     }
 }
 
-
-
-
-
-    
+public void dropTable(DatabaseServer db, String tableName) {
+    String query = "DROP TABLE IF EXISTS " + tableName;
+    try {
+        db.execute(query);
+        System.out.println("Table " + tableName + " has been dropped successfully.");
+    } catch (Exception e) {
+        System.err.println("Error dropping table " + tableName + ": " + e.getMessage());
+    }
+}   
 }
