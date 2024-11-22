@@ -1,0 +1,26 @@
+-- SQLite
+CREATE TABLE chunky_soup (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    price REAL NOT NULL
+);
+
+
+
+CREATE TABLE smooth_soup (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    price REAL NOT NULL
+);
+
+
+
+CREATE TABLE spicy_soup (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    price REAL NOT NULL
+);
+
+
+
+
