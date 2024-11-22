@@ -1,4 +1,6 @@
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class DatabaseHandler {
@@ -88,8 +90,40 @@ public class DatabaseHandler {
     
         return tableCount;
     }
+
+    //Used to get the table names in a database
+    public List<String> getTableNames(DatabaseServer database) {
+    String query = "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'";
+    List<String> tableNames = new ArrayList<>();
+
+    try {
+        ResultSet resultSet = database.query(query);
+        while (resultSet.next()) {
+            tableNames.add(resultSet.getString("name"));
+        }
+    } catch (Exception e) {
+        System.err.println("Error retrieving table names: " + e.getMessage());
+    }
+
+    return tableNames;
+}
     
-    
+// Get the number of rows in a table
+public int getRowCount(DatabaseServer database, String tableName) {
+    String query = "SELECT COUNT(*) FROM " + tableName;
+    int rowCount = 0;
+
+    try {
+        ResultSet resultSet = database.query(query);
+        if (resultSet.next()) {
+            rowCount = resultSet.getInt(1); // Get the count from the first column
+        }
+    } catch (Exception e) {
+        System.err.println("Error getting row count for table " + tableName + ": " + e.getMessage());
+    }
+
+    return rowCount;
+} 
 
 
 
