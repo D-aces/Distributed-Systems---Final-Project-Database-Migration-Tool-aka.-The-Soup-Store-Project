@@ -10,16 +10,18 @@ public class MigrationserverTests{
     public static void main(String[] args) {
 
         // Create two local databases
+        // Change datasource url
         DatabaseServer localDatabase = new DatabaseServer("jdbc:sqlite:LocalSoupStore.db");
         DatabaseServer cloudDatabase = new DatabaseServer("jdbc:sqlite:CloudSoupStore.db"); 
 
-        // Create the handler
+        // Create the handler --> DatabaseManager (rename?)
         DatabaseHandler dbHandler = new DatabaseHandler(localDatabase, cloudDatabase);
 
         // Open connections
         dbHandler.openConnection();
 
         // Clear the cloud database
+        // FOR TESTING PURPOSES ONLY
         System.out.println("\nResetting cloud database for testing...");
         dbHandler.clearCloudDatabase();
 
@@ -38,6 +40,9 @@ public class MigrationserverTests{
 
         // Retrieve the list of table names
         List<String> tableNames = dbHandler.getTableNames(localDatabase);
+
+        // TODO: Use tables from localDatabase to create equivalent tables in cloud
+        // TODO: Do a check to ensure the cloud database has all the relevant tables
 
          // We now wil loop through each of the tables in the local database and migrate them to the cloud database
          System.out.println("Tables in the database named: localDatabase, that need to be migrated to CloudSoupStore\n");
@@ -75,8 +80,6 @@ public class MigrationserverTests{
                         double price = resultSet.getDouble("price"); // Example column: price
 
                         System.out.println("Processing entry #" + (i + 1) + ": ID=" + id + ", Name=" + name + ", Price=" + price);
-                        
-                        // Migrate the data to the cloud database TODO
 
                         // Migrate the data to the cloud database
                          dbHandler.insertDataCloud(tableName, id, name, price);
@@ -91,7 +94,6 @@ public class MigrationserverTests{
                 while (System.currentTimeMillis() - start2 < 500) {
                 // prison
                 }
-
             }
               
         // //Thread.sleep(1000);
@@ -109,12 +111,7 @@ public class MigrationserverTests{
                 // prison
                 }
         dbHandler.printAllEntries(cloudDatabase);
-
-
-
-
-
-
+        
         // Close connections
         dbHandler.closeConnection();
     }
