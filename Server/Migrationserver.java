@@ -1,21 +1,27 @@
 package Server;
-// TODO: Implement some simple load balancers
-// TODO: Answer question: Should a load balancer be in it's own class?
 
-/* TODO: 2 Overall Jobs:
-    - Migration Tasks 
-        - Querying a live database to transfer data
-        - Tracking migration progress
-        - 
-    - Handling live requests to data in said database (or in cloud migrated version)
-*/
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
-// Service Broker: To handle the migration and data access
-public class Migrationserver{
-    // public initialize_migration()
-    // Establish a connection to the client (maybe multi-threaded?)
-    // Establish connection to the on-site database
-    // Establish a connection to the cloud database 
-    
+public class Migrationserver {
+    public static void main(String[] args) {
+        try {
+            DatabaseHandler dbHandler = new DatabaseHandler(
+                new DatabaseServer("jdbc:sqlite:LocalSoupStore.db"),
+                new DatabaseServer("jdbc:sqlite:CloudSoupStore.db")
+            );
+
+            MigrationserverTests server = new MigrationserverTests(dbHandler);
+            Registry registry = LocateRegistry.createRegistry(1099);
+            registry.rebind("MigrationService", server);
+            System.out.println("Migration Server is running...");
+
+            synchronized (Migrationserver.class) {
+                Migrationserver.class.wait(); // Keeps the server alive indefinitely
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
 
