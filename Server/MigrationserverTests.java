@@ -1,10 +1,4 @@
 package Server;
-// TODO: Create a Mockup of Client Request for data
-
-// TODO: Create a Local Database Mockup
-// TODO: Create a Cloud Database Mockup
-
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,8 +42,7 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
             dbHandler.clearCloudDatabase();
         }
 
-        long start1 = System.currentTimeMillis(); // TODO: need to fix all of these start variables, dont need to
-                                                  // declare them all
+        long start1 = System.currentTimeMillis();
         while (System.currentTimeMillis() - start1 < 4000) {
             // prison
         }
@@ -77,9 +70,6 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
         } else {
             System.err.println("Table Size is 0");
         }
-
-        // TODO: Use tables from localDatabase to create equivalent tables in cloud
-        // TODO: Do a check to ensure the cloud database has all the relevant tables
 
         // We now wil loop through each of the tables in the local database and migrate
         // them to the cloud database
@@ -141,7 +131,6 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
             }
 
             // Successful Migration
-            // TODO: Add Validation Check
             System.out.println(counter+1 +  "/" + tableNames.size() + " tables");
             tableMigrationArray2[counter] = true;
             tableMigrationArray[counter] = false;
@@ -162,7 +151,7 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
         System.out.println("\nDropping tables from local database...");
         for (int i = 0; i < tableNames.size(); i++) {
             if (tableMigrationArray[i] == false && tableMigrationArray2[i] == true) {
-                dbHandler.dropTable(localDatabase, tableNames.get(i)); //TODO plase uncomment for demo
+                dbHandler.dropTable(localDatabase, tableNames.get(i)); 
                 System.out.println("Dropped table: " + tableNames.get(i));
             }
         }
@@ -198,7 +187,6 @@ public class MigrationserverTests extends UnicastRemoteObject implements Databas
         }
     }
 
-    // TODO: Implement migration status logic
     @Override
     public String getMigrationStatus(String migrationId) throws RemoteException {
         return null;

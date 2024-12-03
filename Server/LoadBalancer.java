@@ -1,6 +1,4 @@
 package Server;
-// // TODO: Test the LoadBalancer Class
-// // This is a simple load balancer implementation
 
 // import java.util.ArrayList;
 // import java.util.List;
